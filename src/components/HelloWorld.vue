@@ -10,7 +10,7 @@
       ></todo-item>
     </ul>
     <div>
-      <b-button v-b-modal.add-item>Adicionar item</b-button>
+      <b-button @click="$bvModal.show('add-item'); showItemform = true">Adicionar item</b-button>
 
       <b-modal id="add-item" title="Adicionando item" hide-footer>
         <b-form @submit="onSubmitItem" @reset="onResetItem" v-if="showItemform">
@@ -28,15 +28,15 @@
               placeholder="Entre com um lembrete"
             ></b-form-input>
           </b-form-group>
-          
+
           <b-button type="submit" variant="primary">Enviar</b-button>
           <b-button type="reset" variant="danger">Resetar</b-button>
         </b-form>
-        <b-card class="mt-3" header="Form Data Result">
+        <b-card class="mt-3" header="Dados">
           <pre class="m-0">{{ form }}</pre>
         </b-card>
 
-        <b-button class="mt-3" block @click="$bvModal.hide('bv-modal-example')">Fechar</b-button>
+        <b-button class="mt-3" block @click="$bvModal.hide('add-item')">Fechar</b-button>
       </b-modal>
     </div>
   </div>
@@ -54,6 +54,8 @@ const endpoint = 'http://127.0.0.1:3000'
 Vue.use(BootstrapVue)
 
 var globalTodoList = []
+
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
 let removerItem = function (_id) {
   if (confirm('Deseja remover a task ' + _id + '?')) {
@@ -83,7 +85,7 @@ let toLocaleString = function (dateTime) {
   return ''
 }
 
-let fetchAllTasks = function () {
+let fetchAllTasks = function (onFetchItem) {
   // return [{ 'id': '123', 'createdDate': new Date().toLocaleString() }]
   axios
     .get(endpoint + '/tasks/')
@@ -103,7 +105,7 @@ let fetchAllTasks = function () {
     }, () => console.log('erro'))
     .then(jsonlist => {
       console.log('adicionando ' + jsonlist.length + ' itens encontrados às ' + new Date().toLocaleString())
-      globalTodoList.push(...jsonlist)
+      onFetchItem(jsonlist)
     })
   return []
 }
@@ -147,7 +149,25 @@ export default {
   methods: {
     onSubmitItem (evt) {
       evt.preventDefault()
-      alert(JSON.stringify(this.form))
+
+      axios
+        .post(endpoint + '/tasks', {
+          name: this.form.lembrete
+        })
+        .then(response => response.status === 200)
+        .then(() => {
+          this.$nextTick(() => {
+            this.showItemform = false
+            fetchAllTasks(_jsonlist => {
+              // removendo os itens
+              while (globalTodoList.length > 0) {
+                globalTodoList.pop()
+              }
+              // adicionando os itens
+              globalTodoList.push(..._jsonlist)
+            })
+          })
+        })
     },
     onResetItem (evt) {
       evt.preventDefault()
@@ -160,7 +180,9 @@ export default {
     }
   }
 }
-globalTodoList = fetchAllTasks()
+fetchAllTasks(_jsonlist => {
+  globalTodoList.push(..._jsonlist)
+})
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
