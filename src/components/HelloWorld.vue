@@ -9,13 +9,49 @@
         v-bind:createdDate="item.createdDate"
       ></todo-item>
     </ul>
+    <div>
+      <b-button v-b-modal.add-item>Adicionar item</b-button>
+
+      <b-modal id="add-item" title="Adicionando item" hide-footer>
+        <b-form @submit="onSubmitItem" @reset="onResetItem" v-if="showItemform">
+          <b-form-group
+            id="input-group-1"
+            label="Lembrete"
+            label-for="lembrete-input"
+            description="Adicione um lembrete útil, por favor..."
+          >
+            <b-form-input
+              id="lembrete-input"
+              v-model="form.lembrete"
+              type="text"
+              required
+              placeholder="Entre com um lembrete"
+            ></b-form-input>
+          </b-form-group>
+          
+          <b-button type="submit" variant="primary">Enviar</b-button>
+          <b-button type="reset" variant="danger">Resetar</b-button>
+        </b-form>
+        <b-card class="mt-3" header="Form Data Result">
+          <pre class="m-0">{{ form }}</pre>
+        </b-card>
+
+        <b-button class="mt-3" block @click="$bvModal.hide('bv-modal-example')">Fechar</b-button>
+      </b-modal>
+    </div>
   </div>
 </template>
 
 <script>
 import Vue from 'vue'
 import axios from 'axios'
+import BootstrapVue, { VBModal, BModal } from 'bootstrap-vue'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+
 const endpoint = 'http://127.0.0.1:3000'
+
+Vue.use(BootstrapVue)
 
 var globalTodoList = []
 
@@ -87,6 +123,12 @@ Vue.component('todo-item', {
   `,
   methods: {
     deleteTodoItem: removerItem
+  },
+  components: {
+    'b-modal': BModal
+  },
+  directives: {
+    'b-modal': VBModal
   }
 })
 
@@ -95,7 +137,26 @@ export default {
   data () {
     return {
       todoList: globalTodoList,
-      componentKey: 0
+      componentKey: 0,
+      form: {
+        lembrete: ''
+      },
+      showItemform: true
+    }
+  },
+  methods: {
+    onSubmitItem (evt) {
+      evt.preventDefault()
+      alert(JSON.stringify(this.form))
+    },
+    onResetItem (evt) {
+      evt.preventDefault()
+
+      this.form.lembrete = ''
+      this.showItemform = false
+      this.$nextTick(() => {
+        this.showItemform = true
+      })
     }
   }
 }
