@@ -57,6 +57,22 @@ var globalTodoList = []
 
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
+let atualizarItem = function (_id, _text) {
+  if (confirm('Deseja atualizar a task ' + _id + '?')) {
+    axios
+      .put(endpoint + '/tasks/' + _id, {
+        name: _text
+      })
+      .then(response => {
+        if (response.status === 200) {
+          alert('Atualizado com sucesso!')
+        } else {
+          alert('Falha ao tentar atualizar...')
+        }
+      })
+  }
+}
+
 let removerItem = function (_id) {
   if (confirm('Deseja remover a task ' + _id + '?')) {
     /**
@@ -117,14 +133,22 @@ Vue.component('todo-item', {
   props: ['todo'],
   template: `
     <li>
-      <div class="todo-item" v-on:click="deleteTodoItem(todo.id)">
-        <h3>{{ todo.createdDate }}</h3>
-        <div v-html="todo.text"></div>
+      <div class="todo-item">
+        <div>
+          <h3 v-on:click="deleteTodoItem(todo.id)">{{ todo.createdDate }}</h3>
+        </div>
+        <div>
+          <textarea v-model="todo.text"></textarea>
+        </div>
+        <div>
+          <button v-on:click="atualizartodoItem(todo.id, todo.text)">Atualizar</button>
+        </div>
       </div>
     </li>
   `,
   methods: {
-    deleteTodoItem: removerItem
+    deleteTodoItem: removerItem,
+    atualizartodoItem: atualizarItem
   },
   components: {
     'b-modal': BModal
